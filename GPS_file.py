@@ -13,6 +13,9 @@ path='test/'#输出 输入目录
 # path='data/input/'
 pseu='C1C'#观测伪距的频率
 se='S1C'#SNR的信号频率
+readsp3=1 #0读取n文件 否则读sp3文件
+sp3type=['igs','igc']# 最终产品 或 预报产品
+type3=0
 ####END USER INPUT PARAMETERS
 
 system='G'#G for GPS satellite constellation
@@ -116,16 +119,18 @@ for i in lista_diasb:
             archivo_cab.close()  
             ####
             # 读取sp3文件的头部
-            fichero_sp3=path_in+'igs'+str(GPSweek)+str(int(GPSday))+'.sp3'
+            fichero_sp3=path_in+sp3type[type3]+str(GPSweek)+str(int(GPSday))+'.sp3'
             sp3_cab = open(fichero_sp3,'r')
             num_lin_sp3_eph=0
             for linea in sp3_cab.readlines():
                 num_lin_sp3_eph +=1            
                 # sp3的截至标志
                 if num_lin_sp3_eph==1:
-                    numepoh=int(linea[36:39])
+                    numepoh=int(linea[35:39])
                 if num_lin_sp3_eph==3: 
                     satnum=int(linea[4:6])
+                    if sp3type[type3]=='igc':
+                        satnum=32
                 if '*'==linea[0:1]:
                     sp3linea=linea.split()
                     if sp3linea[1]==str(year) and sp3linea[2]==str(mes) and sp3linea[3]==str(dia):
@@ -140,8 +145,6 @@ for i in lista_diasb:
                 linea=archivo_obs.readline()
                 cont +=1
                 
-            num_sat_acum=0
-            cont_ecu=0
             while True and Version==3:
                 linea2=archivo_obs.readline()
                 if not linea2:break
@@ -166,10 +169,12 @@ for i in lista_diasb:
                                    C2=float(linea3[ini_p2:ini_p2+14])
                                    S2=float(linea3[ini_s2:ini_s2+14])
                                    if system=='G':
+                                        if (readsp3==0):
                                     # n文件实时性更好
-                                    #    (x_sat,y_sat,z_sat,el_sat,azi_sat)=read_nav.nav(fichero_nav,num_lin_cab_eph,hora_epoca,id_sat,C2,matriz_approx_pos)
+                                            (x_sat,y_sat,z_sat,el_sat,azi_sat)=read_nav.nav(fichero_nav,num_lin_cab_eph,hora_epoca,id_sat,C2,matriz_approx_pos)
                                     # sp3作为验证数据
-                                       (x_sat,y_sat,z_sat,el_sat,azi_sat)=read_nav.sp3(fichero_sp3,num_lin_sp3_eph,id_sat,matriz_approx_pos,numepoh,satnum,obs_cab,sp3body,obsgpstime,gpssceond)
+                                        else :
+                                            (x_sat,y_sat,z_sat,el_sat,azi_sat)=read_nav.sp3(fichero_sp3,num_lin_sp3_eph,id_sat,matriz_approx_pos,numepoh,satnum,obs_cab,sp3body,obsgpstime,gpssceond)
                                    ### Only store satellite information from elavation less than 30 degrees andhigher than 5 degrees
                                    if el_sat<30 and el_sat>5 :
                                        nueva_fil=epoca,hora_epoca,int(id_sat),S2,el_sat,azi_sat,year,mes,dia

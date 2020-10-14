@@ -152,14 +152,15 @@ def sp3 (fichero_sp3,num_lin_sp3_eph,sv,matriz_approx_pos,numepoh,satnum,obs_cab
     sp3z=np.zeros(9)
     sp3t=np.zeros(9)
     sp3 = open(fichero_sp3,'r')
-    cont=0    
     iv=0
     firstGPS=gpssecond[0]
     gpstime=obsgpstime
     if  numepoh==96:
         iv = int(1 + (gpstime - firstGPS)/(15*60))
-    else:
+    if  numepoh==288 or numepoh==289:
         iv = int(1 + (gpstime - firstGPS)/(5*60))
+    if  numepoh==2881 or numepoh==2880:
+        iv = int(1 + (gpstime - firstGPS)/(30))
 #  iv 在sp3中的目标历元数
 # 将时间存储 后续进行读取
     sp3.close()
@@ -234,7 +235,7 @@ def readsp3body(filename,num_lin_sp3_eph,numepoh,satnum):
             break
         if '*' in linea1:
             sp3_eoph_time=linea1.split()
-            jd=time_lib.jd(int(sp3_eoph_time[1]),int(sp3_eoph_time[2]),int(sp3_eoph_time[3]),int(sp3_eoph_time[4]))+(int(sp3_eoph_time[5])/(60*24))
+            jd=time_lib.jd(int(sp3_eoph_time[1]),int(sp3_eoph_time[2]),int(sp3_eoph_time[3]),int(sp3_eoph_time[4]))+(int(sp3_eoph_time[5])/(60*24))+(float(sp3_eoph_time[6])/(60*60*24))
             sec=time_lib.gps_time(jd)
             gpssecond.append(sec)
             epnum +=1
